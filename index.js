@@ -27,7 +27,16 @@ INSTRUCTIONS:
 // Once you have read the above messages, you can delete all comments. 
 let w = 600;
 let h = 300;
-let dataset = [1,2,6,8]
+
+let dataset;
+
+fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json")
+  .then(response => response.json())
+  .then(data => {
+    dataset = data.data;
+  })
+
+
 let svg = d3.select("body")
             .append("svg")
             .attr("width",w)
@@ -36,9 +45,8 @@ svg.selectAll("rect")
    .data(dataset)
    .enter()
    .append("rect")
-   .attr("width", 50)
-   .attr("height", d => d * 15)
-   .attr("x",(d, i) => i * 53)
-   .attr("y",d => h - d * 15)
+   .attr("width", w / dataset.length)
+   .attr("height", d => d[1] * 15)
+   .attr("x",(d, i) => i * (w / dataset.length))
+   .attr("y",d => h - d[1] * 15)
    .attr("fill","#000");
-    
