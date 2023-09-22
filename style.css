@@ -1,1 +1,32 @@
+body{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 
+    min-height: 100vh;
+
+    padding: 0;
+    margin: 0;
+}
+#title{
+    font-size: 3rem;
+}
+#tooltip{
+    display: none;
+
+    padding: 0 1rem;
+
+    position: absolute;
+    left: 0;
+
+    background-color: #fff;
+
+    border: solid 1px #000;
+}
+.bar{
+    fill: #4e4eff;
+}
+.bar:hover{
+    fill: #1818ff;
+}

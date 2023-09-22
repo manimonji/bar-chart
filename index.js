@@ -1,52 +1,66 @@
-// !! IMPORTANT README:
+let w = 700;
+let h = 460;
 
-// You may add additional external JS and CSS as needed to complete the project, however the current external resource MUST remain in place for the tests to work. BABEL must also be left in place. 
-
-/***********
-INSTRUCTIONS:
-  - Select the project you would 
-    like to complete from the dropdown 
-    menu.
-  - Click the "RUN TESTS" button to
-    run the tests against the blank 
-    pen.
-  - Click the "TESTS" button to see 
-    the individual test cases. 
-    (should all be failing at first)
-  - Start coding! As you fulfill each
-    test case, you will see them go   
-    from red to green.
-  - As you start to build out your 
-    project, when tests are failing, 
-    you should get helpful errors 
-    along the way!
-    ************/
-
-// PLEASE NOTE: Adding global style rules using the * selector, or by adding rules to body {..} or html {..}, or to all elements within body or html, i.e. h1 {..}, has the potential to pollute the test suite's CSS. Try adding: * { color: red }, for a quick example!
-
-// Once you have read the above messages, you can delete all comments. 
-let w = 600;
-let h = 300;
-
-let dataset;
+let padding = 40;
 
 fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json")
   .then(response => response.json())
   .then(data => {
-    dataset = data.data;
-  })
+    let dataset = data.data;
 
+    let GDPScale = d3.scaleLinear()
+                     .domain([0, d3.max(dataset, d => d[1])])
+                     .range([h - padding, padding]);
 
-let svg = d3.select("body")
-            .append("svg")
-            .attr("width",w)
-            .attr("height",h);
-svg.selectAll("rect")
-   .data(dataset)
-   .enter()
-   .append("rect")
-   .attr("width", w / dataset.length)
-   .attr("height", d => d[1] * 15)
-   .attr("x",(d, i) => i * (w / dataset.length))
-   .attr("y",d => h - d[1] * 15)
-   .attr("fill","#000");
+    let dateScale = d3.scaleTime()
+                       .domain([d3.min(dataset, d => new Date(d[0])), d3.max(dataset, d => new Date(d[0]))])
+                       .range([0,w]);
+    
+    let GDPAxis = d3.axisLeft(GDPScale);
+    let dateAxis = d3.axisBottom(dateScale);
+
+    let svg = d3.select("body")
+                .append("svg")
+                .attr("width",w)
+                .attr("height",h);
+    svg.selectAll("rect")
+      .data(dataset)
+      .enter()
+      .append("rect")
+      // .attr("width", w / dataset.length)
+      .attr("width", (d,i) => i + 1 < dataset.length ? dateScale(new Date(dataset[i+1][0])) - dateScale(new Date(d[0])) : w)
+      .attr("height", d => (GDPScale(d[1]) - h + padding) * -1)
+      // .attr("x",(d, i) => i * w / dataset.length + padding)
+      .attr("x", d => dateScale(new Date(d[0])) + padding)
+      .attr("y",d => h - ((GDPScale(d[1]) - h) * -1) - padding )
+      .attr("fill","#000")
+      .attr("class", "bar")
+      .attr("data-gdp",d => d[1])
+      .attr("data-date",d => d[0])
+      .on("mouseenter", (e) => {
+        let target = d3.select(e.target);
+        let date = new Date(target.attr("data-date"));
+        let dateString = date.toLocaleString('default', { month: 'long' }) + " " + date.getDay() + " , "+ date.getFullYear();
+
+        d3.select("#tooltip")
+          .style("display","block")
+          .style("transform", `translate(${dateScale(date) + 400}px, 0)`)
+          .attr("data-date", target.attr("data-date"));
+
+        d3.select("#tooltip > .gdp")
+          .text(target.attr("data-gdp"));
+        d3.select("#tooltip > .date")
+          .text(dateString);
+      })
+      .on("mouseleave", () => {
+        d3.select("#tooltip").style("display","none");
+      });
+    svg.append("g")
+       .attr("id", "y-axis")
+       .attr("transform",`translate(${padding}, ${-padding})`)
+       .call(GDPAxis);
+    svg.append("g")
+       .attr("id", "x-axis")
+       .attr("transform",`translate(${padding}, ${h - (padding * 2)})`)
+       .call(dateAxis);
+  });
